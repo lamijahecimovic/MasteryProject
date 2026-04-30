@@ -14,11 +14,13 @@ namespace DocumentProcessor.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ParserService _parser;
+        private readonly ValidationService _validator;
 
-        public DocumentsController(AppDbContext context, ParserService parser)
+        public DocumentsController(AppDbContext context, ParserService parser, ValidationService validator)
         {
             _context = context;
             _parser = parser;
+            _validator = validator;
         }
 
         // POST: api/documents/upload
@@ -42,6 +44,7 @@ namespace DocumentProcessor.Controllers
                 "txt" => _parser.ParseTxt(fileBytes),
                 _ => throw new Exception("Format nije podržan")
             };
+            var (issues, status) = _validator.Validate(parsed);
 
             var doc = new Document
             {
@@ -56,8 +59,8 @@ namespace DocumentProcessor.Controllers
                 Tax = parsed.Tax,
                 Total = parsed.Total,
                 LineItemsJson = JsonSerializer.Serialize(parsed.LineItems),
-                Status = "uploaded",
-                IssuesJson = "[]",
+                Status = status,
+                IssuesJson = JsonSerializer.Serialize(issues),
             };
 
             _context.Documents.Add(doc);
@@ -104,6 +107,49 @@ namespace DocumentProcessor.Controllers
                 Issues = JsonSerializer.Deserialize<List<string>>(doc.IssuesJson) ?? new(),
                 CreatedAt = doc.CreatedAt,
             };
+        }
+        // PATCH: api/documents/5/status
+        [HttpPatch("{id}/status")]
+        public async Task<ActionResult<DocumentDto>> UpdateStatus(int id, [FromBody] string newStatus)
+        {
+            var allowed = new[] { "uploaded", "needs_review", "validated", "rejected" };
+            if (!allowed.Contains(newStatus))
+                return BadRequest("Nevažeći status.");
+
+            var doc = await _context.Documents.FindAsync(id);
+            if (doc == null) return NotFound();
+
+            doc.Status = newStatus;
+            await _context.SaveChangesAsync();
+
+            return Ok(MapToDto(doc));
+        }
+        // PUT: api/documents/5 //manuelna korekcija
+        [HttpPut("{id}")]
+        public async Task<ActionResult<DocumentDto>> Update(int id, [FromBody] DocumentDto updated)
+        {
+            var doc = await _context.Documents.FindAsync(id);
+            if (doc == null) return NotFound();
+
+           
+            doc.DocType = updated.DocType;
+            doc.Supplier = updated.Supplier;
+            doc.DocNumber = updated.DocNumber;
+            doc.IssueDate = updated.IssueDate;
+            doc.Currency = updated.Currency;
+            doc.Subtotal = updated.Subtotal;
+            doc.Tax = updated.Tax;
+            doc.Total = updated.Total;
+            doc.LineItemsJson = JsonSerializer.Serialize(updated.LineItems);
+
+            
+            var (issues, status) = _validator.Validate(updated, id);
+            doc.IssuesJson = JsonSerializer.Serialize(issues);
+            doc.Status = status;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(MapToDto(doc));
         }
     }
 }

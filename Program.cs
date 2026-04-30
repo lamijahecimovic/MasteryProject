@@ -14,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 builder.Services.AddScoped<ParserService>();
+builder.Services.AddScoped<ValidationService>();
 
 
 builder.Services.AddCors(options =>
