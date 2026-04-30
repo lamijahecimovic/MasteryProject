@@ -1,0 +1,6 @@
+@mastery_project_backend_HostAddress = http://localhost:5185
+
+GET {{mastery_project_backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
