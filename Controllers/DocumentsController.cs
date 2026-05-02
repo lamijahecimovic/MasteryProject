@@ -28,7 +28,7 @@ namespace DocumentProcessor.Controllers
         public async Task<ActionResult<DocumentDto>> Upload(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("Fajl je prazan.");
+                return BadRequest("The file is empty.");
 
             using var ms = new MemoryStream();
             await file.CopyToAsync(ms);
@@ -43,7 +43,7 @@ namespace DocumentProcessor.Controllers
                 "csv" => _parser.ParseCsv(fileBytes),
                 "txt" => _parser.ParseTxt(fileBytes),
                 "png" or "jpg" or "jpeg" => _parser.ParseImage(fileBytes),
-                _ => throw new Exception("Format nije podržan")
+                _ => throw new Exception("Unsupported file format.")
             };
             var (issues, status) = _validator.Validate(parsed);
 

@@ -20,7 +20,7 @@ namespace DocumentProcessor.Services
             using var pdf = PdfDocument.Open(fileBytes);
             foreach (var page in pdf.GetPages())
             {
-                // Grupiraj riječi po Y poziciji (isti red = slična Y koordinata)
+                
                 var wordsByLine = page.GetWords()
                     .GroupBy(w => Math.Round(w.BoundingBox.Bottom, 0))
                     .OrderByDescending(g => g.Key);

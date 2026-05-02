@@ -42,19 +42,19 @@ namespace DocumentProcessor.Services
         private void ValidateMissingFields(DocumentDto doc, List<string> issues)
         {
             if (string.IsNullOrWhiteSpace(doc.DocType))
-                issues.Add("Tip dokumenta nije pronađen (invoice ili purchase_order).");
+                issues.Add("Document type not found (invoice or purchase_order).");
 
             if (string.IsNullOrWhiteSpace(doc.Supplier))
-                issues.Add("Naziv dobavljača nedostaje.");
+                issues.Add("Supplier name is missing.");
 
             if (string.IsNullOrWhiteSpace(doc.DocNumber))
-                issues.Add("Broj dokumenta nedostaje.");
+                issues.Add("Document number is missing.");
 
             if (string.IsNullOrWhiteSpace(doc.IssueDate))
-                issues.Add("Datum izdavanja nedostaje.");
+                issues.Add("Issue date is missing.");
 
             if (doc.Total == null)
-                issues.Add("Ukupni iznos (total) nedostaje.");
+                issues.Add("Total amount is missing");
         }
 
         
@@ -67,7 +67,7 @@ namespace DocumentProcessor.Services
             var actualTotal = Math.Round(doc.Total.Value, 2);
 
             if (Math.Abs(expectedTotal - actualTotal) > 0.01)
-                issues.Add($"Total nije ispravan: {doc.Subtotal} + {doc.Tax} = {expectedTotal}, ali dokument prikazuje {actualTotal}.");
+                issues.Add($"Total amount missmatch: {doc.Subtotal} + {doc.Tax} = {expectedTotal}, but found {actualTotal}.");
         }
 
         
@@ -83,7 +83,7 @@ namespace DocumentProcessor.Services
                 var actual = Math.Round(item.Total, 2);
 
                 if (Math.Abs(expected - actual) > 0.01)
-                    issues.Add($"Stavka {i + 1} ({item.Description}): {item.Quantity} × {item.UnitPrice} = {expected}, ali prikazuje {actual}.");
+                    issues.Add($"Item {i + 1} ({item.Description}): {item.Quantity} × {item.UnitPrice} = {expected}, but found {actual}.");
             }
 
             
@@ -93,7 +93,7 @@ namespace DocumentProcessor.Services
                 var subtotal = Math.Round(doc.Subtotal.Value, 2);
 
                 if (Math.Abs(sumOfItems - subtotal) > 0.01)
-                    issues.Add($"Suma stavki ({sumOfItems}) ne odgovara subtotalu ({subtotal}).");
+                    issues.Add($"Sum of items ({sumOfItems}) missmatch ({subtotal}).");
             }
         }
 
@@ -113,9 +113,9 @@ namespace DocumentProcessor.Services
             );
 
             if (!validDate)
-                issues.Add($"Datum '{doc.IssueDate}' nije u ispravnom formatu.");
+                issues.Add($"Date '{doc.IssueDate}' does not match the required format.");
             else if (parsedDate > DateTime.UtcNow)
-                issues.Add($"Datum izdavanja ({doc.IssueDate}) je u budućnosti.");
+                issues.Add($"Issue date ({doc.IssueDate}) is in the future.");
         }
 
         
@@ -130,7 +130,7 @@ namespace DocumentProcessor.Services
                 (currentDocId == null || d.Id != currentDocId));
 
             if (exists)
-                issues.Add($"Dokument sa brojem '{doc.DocNumber}' već postoji u bazi (duplikat).");
+                issues.Add($"A document with number '{doc.DocNumber}' already exists (duplicate).");
         }
     }
 }
