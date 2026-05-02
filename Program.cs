@@ -23,7 +23,14 @@ builder.Services.AddScoped<ValidationService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        policy
+            .WithOrigins(
+                "http://localhost",
+                "http://localhost:5270",
+                "https://fir-project-78e65.web.app"  
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader());
 });
 
 var app = builder.Build();
