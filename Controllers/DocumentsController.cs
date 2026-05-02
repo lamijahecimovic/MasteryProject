@@ -42,6 +42,7 @@ namespace DocumentProcessor.Controllers
                 "pdf" => _parser.ParsePdf(fileBytes),
                 "csv" => _parser.ParseCsv(fileBytes),
                 "txt" => _parser.ParseTxt(fileBytes),
+                "png" or "jpg" or "jpeg" => _parser.ParseImage(fileBytes),
                 _ => throw new Exception("Format nije podržan")
             };
             var (issues, status) = _validator.Validate(parsed);
@@ -150,6 +151,18 @@ namespace DocumentProcessor.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(MapToDto(doc));
+        }
+        // DELETE: api/documents/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var doc = await _context.Documents.FindAsync(id);
+            if (doc == null) return NotFound();
+
+            _context.Documents.Remove(doc);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

@@ -7,18 +7,34 @@ namespace DocumentProcessor.Services
 {
     public class ParserService
     {
-        
+        private readonly OcrService _ocr;
+
+        public ParserService(OcrService ocr)
+        {
+            _ocr = ocr;
+        }
+
         public DocumentDto ParsePdf(byte[] fileBytes)
         {
             var sb = new StringBuilder();
             using var pdf = PdfDocument.Open(fileBytes);
             foreach (var page in pdf.GetPages())
-                sb.AppendLine(page.Text);
+            {
+                // Grupiraj riječi po Y poziciji (isti red = slična Y koordinata)
+                var wordsByLine = page.GetWords()
+                    .GroupBy(w => Math.Round(w.BoundingBox.Bottom, 0))
+                    .OrderByDescending(g => g.Key);
 
+                foreach (var line in wordsByLine)
+                {
+                    var lineText = string.Join(" ", line.Select(w => w.Text));
+                    sb.AppendLine(lineText);
+                }
+            }
             return ExtractFieldsFromText(sb.ToString());
         }
 
-      
+
         public DocumentDto ParseCsv(byte[] fileBytes)
         {
             var text = Encoding.UTF8.GetString(fileBytes);
@@ -54,8 +70,13 @@ namespace DocumentProcessor.Services
             var text = Encoding.UTF8.GetString(fileBytes);
             return ExtractFieldsFromText(text);
         }
+        public DocumentDto ParseImage(byte[] fileBytes)
+        {
+            var text = _ocr.ExtractTextFromImage(fileBytes);
+            return ExtractFieldsFromText(text);
+        }
 
-        
+
         private DocumentDto ExtractFieldsFromText(string text)
         {
             var data = new DocumentDto();

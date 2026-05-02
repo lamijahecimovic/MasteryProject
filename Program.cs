@@ -12,7 +12,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=documents.db"));
 
-
+builder.Services.AddScoped<OcrService>();
 builder.Services.AddScoped<ParserService>();
 builder.Services.AddScoped<ValidationService>();
 
