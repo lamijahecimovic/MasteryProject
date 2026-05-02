@@ -1,12 +1,15 @@
 using DocumentProcessor.Data;
 using DocumentProcessor.Services;
 using Microsoft.EntityFrameworkCore;
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
